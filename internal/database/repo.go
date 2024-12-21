@@ -440,7 +440,7 @@ func (repo *Repository) UpdateSize() error {
 	}
 
 	repo.Size = countObject.Size + countObject.SizePack
-	if _, err = x.Id(repo.ID).Cols("size").Update(repo); err != nil {
+	if _, err = x.ID(repo.ID).Cols("size").Update(repo); err != nil {
 		return fmt.Errorf("update size: %v", err)
 	}
 	return nil
@@ -1873,27 +1873,32 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, count
 	}
 
 	repos = make([]*Repository, 0, opts.PageSize)
-	sess := x.Alias("repo")
-	// Attempt to find repositories that opts.UserID has access to,
-	// this does not include other people's private repositories even if opts.UserID is an admin.
-	if !opts.Private && opts.UserID > 0 {
-		sess.Join("LEFT", "access", "access.repo_id = repo.id").
-			Where("repo.owner_id = ? OR access.user_id = ? OR (repo.is_private = ? AND repo.is_unlisted = ?) OR (repo.is_private = ? AND (repo.allow_public_wiki = ? OR repo.allow_public_issues = ?))", opts.UserID, opts.UserID, false, false, true, true, true)
-	} else {
-		// Only return public repositories if opts.Private is not set
-		if !opts.Private {
-			sess.And("(repo.is_private = ? AND repo.is_unlisted = ?) OR (repo.is_private = ? AND (repo.allow_public_wiki = ? OR repo.allow_public_issues = ?))", false, false, true, true, true)
+	newSess := func() *xorm.Session {
+		sess := x.Alias("repo")
+		// Attempt to find repositories that opts.UserID has access to,
+		// this does not include other people's private repositories even if opts.UserID is an admin.
+		if !opts.Private && opts.UserID > 0 {
+			sess.Join("LEFT", "access", "access.repo_id = repo.id").
+				Where("repo.owner_id = ? OR access.user_id = ? OR (repo.is_private = ? AND repo.is_unlisted = ?) OR (repo.is_private = ? AND (repo.allow_public_wiki = ? OR repo.allow_public_issues = ?))", opts.UserID, opts.UserID, false, false, true, true, true)
+		} else {
+			// Only return public repositories if opts.Private is not set
+			if !opts.Private {
+				sess.And("(repo.is_private = ? AND repo.is_unlisted = ?) OR (repo.is_private = ? AND (repo.allow_public_wiki = ? OR repo.allow_public_issues = ?))", false, false, true, true, true)
+			}
 		}
-	}
-	if len(opts.Keyword) > 0 {
-		sess.And("repo.lower_name LIKE ? OR repo.description LIKE ?", "%"+strings.ToLower(opts.Keyword)+"%", "%"+strings.ToLower(opts.Keyword)+"%")
-	}
-	if opts.OwnerID > 0 {
-		sess.And("repo.owner_id = ?", opts.OwnerID)
+		if len(opts.Keyword) > 0 {
+			sess.And("repo.lower_name LIKE ? OR repo.description LIKE ?", "%"+strings.ToLower(opts.Keyword)+"%", "%"+strings.ToLower(opts.Keyword)+"%")
+		}
+		if opts.OwnerID > 0 {
+			sess.And("repo.owner_id = ?", opts.OwnerID)
+		}
+		return sess
 	}
 
+	sess := newSess()
+
 	// We need all fields (repo.*) in final list but only ID (repo.id) is good enough for counting.
-	count, err = sess.Clone().Distinct("repo.id").Count(new(Repository))
+	count, err = newSess().Distinct("repo.id").Count(new(Repository))
 	if err != nil {
 		return nil, 0, fmt.Errorf("Count: %v", err)
 	}

@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/glebarez/sqlite"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 

@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"path"
@@ -17,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
 	log "unknwon.dev/clog/v2"
 	"xorm.io/core"
 	"xorm.io/xorm"
@@ -27,20 +27,22 @@ import (
 )
 
 // Engine represents a XORM engine or session.
-type Engine interface {
-	Delete(any) (int64, error)
-	Exec(...any) (sql.Result, error)
-	Find(any, ...any) error
-	Get(any) (bool, error)
-	ID(any) *xorm.Session
-	In(string, ...any) *xorm.Session
-	Insert(...any) (int64, error)
-	InsertOne(any) (int64, error)
-	Iterate(any, xorm.IterFunc) error
-	Sql(string, ...any) *xorm.Session
-	Table(any) *xorm.Session
-	Where(any, ...any) *xorm.Session
-}
+//type Engine interface {
+//	Delete(...any) (int64, error)
+//	Exec(...any) (sql.Result, error)
+//	Find(any, ...any) error
+//	Get(...any) (bool, error)
+//	ID(any) *xorm.Session
+//	In(string, ...any) *xorm.Session
+//	Insert(...any) (int64, error)
+//	InsertOne(any) (int64, error)
+//	Iterate(any, xorm.IterFunc) error
+//	Sql(any, ...any) *xorm.Session
+//	Table(any) *xorm.Session
+//	Where(any, ...any) *xorm.Session
+//}
+
+type Engine xorm.Interface
 
 var (
 	x            *xorm.Engine
@@ -105,6 +107,7 @@ func getEngine() (*xorm.Engine, error) {
 		}
 		conf.UseSQLite3 = true
 		connStr = "file:" + conf.Database.Path + "?cache=shared&mode=rwc"
+		driver = "sqlite"
 
 	default:
 		return nil, fmt.Errorf("unknown database type: %s", conf.Database.Type)
@@ -163,9 +166,9 @@ func SetEngine() (*gorm.DB, error) {
 	x.SetConnMaxLifetime(time.Second)
 
 	if conf.IsProdMode() {
-		x.SetLogger(xorm.NewSimpleLogger3(fileWriter, xorm.DEFAULT_LOG_PREFIX, xorm.DEFAULT_LOG_FLAG, core.LOG_ERR))
-	} else {
-		x.SetLogger(xorm.NewSimpleLogger(fileWriter))
+		//x.SetLogger(xorm.NewSimpleLogger3(fileWriter, xorm.DEFAULT_LOG_PREFIX, xorm.DEFAULT_LOG_FLAG, core.LOG_ERR))
+		//} else {
+		//	x.SetLogger(xorm.NewSimpleLogger(fileWriter))
 	}
 	x.ShowSQL(true)
 
