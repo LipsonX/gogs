@@ -6,7 +6,6 @@ package ssh
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -54,27 +53,27 @@ func handleServerConn(keyID string, chans <-chan ssh.NewChannel) {
 			for req := range in {
 				payload := cleanCommand(string(req.Payload))
 				switch req.Type {
-				case "env":
-					var env struct {
-						Name  string
-						Value string
-					}
-					if err := ssh.Unmarshal(req.Payload, &env); err != nil {
-						log.Warn("SSH: Invalid env payload %q: %v", req.Payload, err)
-						continue
-					}
-					// Sometimes the client could send malformed command (i.e. missing "="),
-					// see https://discuss.gogs.io/t/ssh/3106.
-					if env.Name == "" || env.Value == "" {
-						log.Warn("SSH: Invalid env arguments: %+v", env)
-						continue
-					}
-
-					_, stderr, err := com.ExecCmd("env", fmt.Sprintf("%s=%s", env.Name, env.Value))
-					if err != nil {
-						log.Error("env: %v - %s", err, stderr)
-						return
-					}
+				//case "env":
+				//	var env struct {
+				//		Name  string
+				//		Value string
+				//	}
+				//	if err := ssh.Unmarshal(req.Payload, &env); err != nil {
+				//		log.Warn("SSH: Invalid env payload %q: %v", req.Payload, err)
+				//		continue
+				//	}
+				//	// Sometimes the client could send malformed command (i.e. missing "="),
+				//	// see https://discuss.gogs.io/t/ssh/3106.
+				//	if env.Name == "" || env.Value == "" {
+				//		log.Warn("SSH: Invalid env arguments: %+v", env)
+				//		continue
+				//	}
+				//
+				//	_, stderr, err := com.ExecCmd("env", fmt.Sprintf("%s=%s", env.Name, env.Value))
+				//	if err != nil {
+				//		log.Error("env: %v - %s", err, stderr)
+				//		return
+				//	}
 
 				case "exec":
 					cmdName := strings.TrimLeft(payload, "'()")

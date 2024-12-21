@@ -238,7 +238,8 @@ func (repo *Repository) GetDiffPreview(branch, treePath, content string) (diff *
 		return nil, fmt.Errorf("write file: %v", err)
 	}
 
-	cmd := exec.Command("git", "diff", treePath)
+	//cmd := exec.Command("git", "diff", treePath)
+	cmd := exec.Command("git", "diff", "--end-of-options", treePath)
 	cmd.Dir = localPath
 	cmd.Stderr = os.Stderr
 
@@ -299,7 +300,23 @@ func (repo *Repository) DeleteRepoFile(doer *User, opts DeleteRepoFileOptions) (
 	}
 
 	localPath := repo.LocalCopyPath()
-	if err = os.Remove(path.Join(localPath, opts.TreePath)); err != nil {
+	//if err = os.Remove(path.Join(localPath, opts.TreePath)); err != nil {
+	noSymlinksPath, err := filepath.EvalSymlinks(path.Join(localPath, opts.TreePath))
+	if err != nil {
+		return fmt.Errorf("invalid tree path: %v", err)
+	}
+	normalizedPath, err := filepath.Abs(noSymlinksPath)
+	if err != nil {
+		return fmt.Errorf("invalid tree path: %v", opts.TreePath)
+	}
+	if !strings.HasPrefix(normalizedPath+"/", localPath+"/") {
+		return fmt.Errorf("invalid tree path: %v", opts.TreePath)
+	}
+	gitPath := path.Join(localPath, ".git")
+	if normalizedPath == gitPath || strings.HasPrefix(normalizedPath+"/", gitPath+"/") {
+		return fmt.Errorf("invalid tree path: %v", opts.TreePath)
+	}
+	if err = os.Remove(normalizedPath); err != nil {
 		return fmt.Errorf("remove file %q: %v", opts.TreePath, err)
 	}
 

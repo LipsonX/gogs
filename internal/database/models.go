@@ -20,6 +20,7 @@ import (
 	log "unknwon.dev/clog/v2"
 	"xorm.io/core"
 	"xorm.io/xorm"
+	xlog "xorm.io/xorm/log"
 
 	"gogs.io/gogs/internal/conf"
 	"gogs.io/gogs/internal/database/migrations"
@@ -166,9 +167,9 @@ func SetEngine() (*gorm.DB, error) {
 	x.SetConnMaxLifetime(time.Second)
 
 	if conf.IsProdMode() {
-		//x.SetLogger(xorm.NewSimpleLogger3(fileWriter, xorm.DEFAULT_LOG_PREFIX, xorm.DEFAULT_LOG_FLAG, core.LOG_ERR))
-		//} else {
-		//	x.SetLogger(xorm.NewSimpleLogger(fileWriter))
+		x.SetLogLevel(xlog.LOG_ERR)
+	} else {
+		x.SetLogLevel(xlog.LOG_DEBUG)
 	}
 	x.ShowSQL(true)
 

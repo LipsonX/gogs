@@ -126,7 +126,11 @@ func createTag(gitRepo *git.Repository, r *Release) error {
 			}
 
 			// Trim '--' prefix to prevent command line argument vulnerability.
-			r.TagName = strings.TrimPrefix(r.TagName, "--")
+			//r.TagName = strings.TrimPrefix(r.TagName, "--")
+			// Prevent argument injection vulnerability.
+			if strings.HasPrefix(r.TagName, "-") {
+				return fmt.Errorf("invalid tag name: %v", r.TagName)
+			}
 			if err = gitRepo.CreateTag(r.TagName, commit.ID.String()); err != nil {
 				if strings.Contains(err.Error(), "is not a valid tag name") {
 					return ErrInvalidTagName{r.TagName}
