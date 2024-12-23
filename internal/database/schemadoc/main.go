@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/glebarez/sqlite"
+	"github.com/LipsonX/sqlite"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"gopkg.in/DATA-DOG/go-sqlmock.v2"

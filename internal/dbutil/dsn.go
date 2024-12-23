@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/glebarez/sqlite"
+	"github.com/LipsonX/sqlite"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
